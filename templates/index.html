@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Netta</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="app">
+<!-- SIDEBAR -->
+{% if current_user.is_authenticated %}
+<nav class="sidebar">
+<div class="sidebar-fixed">
+<a href="/" class="logo"><span class="logo-n">N</span><span class="logo-t">Netta</span></a>
+<ul class="nav">
+<li><a href="{{ url_for('feed') }}" class="nav-a {% if page=='feed' and not explore %}act{% endif %}">
+<svg viewBox="0 0 24 24" width="24"><path fill="currentColor" d="M12 3L4 9v12h5v-7h6v7h5V9z"/></svg><span>Главная</span></a></li>
+<li><a href="{{ url_for('explore') }}" class="nav-a {% if explore %}act{% endif %}">
+<svg viewBox="0 0 24 24" width="24"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><span>Обзор</span></a></li>
+<li><a href="{{ url_for('profile', username=current_user.username) }}" class="nav-a {% if page=='profile' and user and user.id==current_user.id %}act{% endif %}">
+<svg viewBox="0 0 24 24" width="24"><path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><span>Профиль</span></a></li>
+<li><a href="{{ url_for('verification') }}" class="nav-a {% if page=='verification' %}act{% endif %}">
+<svg viewBox="0 0 24 24" width="24"><path fill="currentColor" d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg><span>Верификация</span></a></li>
+{% if current_user.is_admin() %}
+<li><a href="{{ url_for('admin_dashboard') }}" class="nav-a nav-admin {% if page=='admin' %}act{% endif %}">
+<svg viewBox="0 0 24 24" width="24"><path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 00-.48-.41h-3.84a.48.48 0 00-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87a.48.48 0 00.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.61 3.61 0 0112 15.6z"/></svg><span>Админ</span></a></li>
+{% endif %}
+<li><a href="{{ url_for('logout') }}" class="nav-a">
+<svg viewBox="0 0 24 24" width="24"><path fill="currentColor" d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg><span>Выйти</span></a></li>
+</ul>
+</div>
+</nav>
+{% endif %}
+
+<!-- MAIN -->
+<main class="main">
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% for cat, msg in messages %}
+<div class="alert alert-{{cat}}">{{msg}}<button onclick="this.parentElement.remove()" class="alert-x">&times;</button></div>
+{% endfor %}{% endwith %}
+
+<!-- ========== LANDING ========== -->
+{% if not page or (not current_user.is_authenticated and page not in ['login','register']) %}
+<div class="landing">
+<div class="landing-inner">
+<div class="logo-n big">N</div>
+<h1>Добро пожаловать в <span class="grad">Netta</span></h1>
+<p class="sub">Социальная сеть, где каждый голос имеет значение</p>
+<div class="landing-btns">
+<a href="{{ url_for('register') }}" class="btn btn-p btn-l">Создать аккаунт</a>
+<a href="{{ url_for('login') }}" class="btn btn-o btn-l">Войти</a>
+</div>
+<div class="features">
+<div class="feat"><div class="fi">💬</div><h3>Посты</h3><p>Делитесь мыслями</p></div>
+<div class="feat"><div class="fi">👥</div><h3>Подписки</h3><p>Находите людей</p></div>
+<div class="feat"><div class="fi">✅</div><h3>Верификация</h3><p>Синяя и красная галочки</p></div>
+</div>
+</div>
+</div>
+
+<!-- ========== REGISTER ========== -->
+{% elif page == 'register' %}
+<div class="auth">
+<div class="auth-card">
+<div class="logo-n">N</div>
+<h1>Регистрация в Netta</h1>
+<form method="POST" action="{{ url_for('register') }}">
+<input type="text" name="username" placeholder="Имя пользователя" class="inp" value="{{ username|default('') }}" required minlength="3">
+<input type="email" name="email" placeholder="Email" class="inp" value="{{ email|default('') }}" required>
+<input type="password" name="password" placeholder="Пароль (мин. 6)" class="inp" required minlength="6">
+<input type="password" name="password2" placeholder="Повторите пароль" class="inp" required>
+<button class="btn btn-p btn-block">Зарегистрироваться</button>
+</form>
+<p class="auth-f">Уже есть аккаунт? <a href="{{ url_for('login') }}">Войти</a></p>
+</div>
+</div>
+
+<!-- ========== LOGIN ========== -->
+{% elif page == 'login' %}
+<div class="auth">
+<div class="auth-card">
+<div class="logo-n">N</div>
+<h1>Вход в Netta</h1>
+<form method="POST" action="{{ url_for('login') }}">
+<input type="text" name="username" placeholder="Имя пользователя или Email" class="inp" required>
+<input type="password" name="password" placeholder="Пароль" class="inp" required>
+<button class="btn btn-p btn-block">Войти</button>
+</form>
+<p class="auth-f">Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрироваться</a></p>
+<div class="demo">Админ: admin / admin123</div>
+</div>
+</div>
+
+<!-- ========== FEED ========== -->
+{% elif page == 'feed' %}
+<div class="page-head"><h1>{% if explore %}Обзор{% else %}Главная{% endif %}</h1></div>
+<div class="compose">
+<form method="POST" action="{{ url_for('feed') }}">
+<div class="compose-row">
+<div class="av av-ph">{{ current_user.username[0].upper() }}</div>
+{% if current_user.avatar_url %}<img src="{{ current_user.avatar_url }}" class="av compose-av-img">{% endif %}
+<div class="compose-body">
+<textarea name="content" placeholder="Что нового?" class="compose-ta" maxlength="500" required></textarea>
+<div class="compose-foot"><span class="cc">500</span><button class="btn btn-p btn-s">Опубликовать</button></div>
+</div>
+</div>
+</form>
+</div>
+{% if posts and posts.items %}
+{% for p in posts.items %}
+<div class="post">
+<div class="post-av">
+{% if p.author.avatar_url %}<img src="{{ p.author.avatar_url }}" class="av">
+{% else %}<div class="av av-ph">{{ p.author.username[0].upper() }}</div>{% endif %}
+</div>
+<div class="post-body">
+<div class="post-head">
+<a href="{{ url_for('profile', username=p.author.username) }}" class="post-author">
+<b>{{ p.author.display_name or p.author.username }}</b>
+{% if p.author.verification == 'blue' %}<span class="ck ck-b" title="Верифицирован">✓</span>
+{% elif p.author.verification == 'red' %}<span class="ck ck-r" title="Администратор">✓</span>{% endif %}
+<span class="un">@{{ p.author.username }}</span>
+</a>
+<span class="pt">· {{ p.time_ago() }}</span>
+</div>
+<div class="post-text">{{ p.content }}</div>
+<div class="post-acts">
+<a href="{{ url_for('like_post', post_id=p.id) }}" class="pa {% if current_user.has_liked(p) %}liked{% endif %}">
+{% if current_user.has_liked(p) %}♥{% else %}♡{% endif %} {{ p.likes_count() }}
+</a>
+{% if p.author == current_user or current_user.is_admin() %}
+<a href="{{ url_for('delete_post', post_id=p.id) }}" class="pa pa-del" onclick="return confirm('Удалить?')">🗑</a>
+{% endif %}
+</div>
+</div>
+</div>
+{% endfor %}
+<div class="pag">
+{% if posts.has_prev %}<a href="?page={{ posts.prev_num }}" class="btn btn-o btn-s">← Назад</a>{% endif %}
+{% if posts.has_next %}<a href="?page={{ posts.next_num }}" class="btn btn-o btn-s">Далее →</a>{% endif %}
+</div>
+{% else %}
+<div class="empty"><h2>Пока пусто</h2><p>Напишите первый пост или подпишитесь на кого-нибудь</p></div>
+{% endif %}
+
+<!-- ========== PROFILE ========== -->
+{% elif page == 'profile' %}
+<div class="prof-banner"></div>
+<div class="prof-info">
+<div class="prof-top">
+<div class="prof-av-wrap">
+{% if user.avatar_url %}<img src="{{ user.avatar_url }}" class="av av-big">
+{% else %}<div class="av av-big av-ph">{{ user.username[0].upper() }}</div>{% endif %}
+</div>
+<div class="prof-btns">
+{% if current_user.is_authenticated and current_user.id != user.id %}
+{% if current_user.is_following(user) %}
+<a href="{{ url_for('unfollow', username=user.username) }}" class="btn btn-o btn-s">Отписаться</a>
+{% else %}
+<a href="{{ url_for('follow', username=user.username) }}" class="btn btn-p btn-s">Подписаться</a>
+{% endif %}
+{% elif current_user.is_authenticated and current_user.id == user.id %}
+<a href="{{ url_for('edit_profile') }}" class="btn btn-o btn-s">Редактировать</a>
+{% endif %}
+</div>
+</div>
+<h1 class="prof-name">{{ user.display_name or user.username }}
+{% if user.verification == 'blue' %}<span class="ck ck-b ck-lg">✓</span>
+{% elif user.verification == 'red' %}<span class="ck ck-r ck-lg">✓</span>{% endif %}
+</h1>
+<p class="un">@{{ user.username }}</p>
+{% if user.bio %}<p class="prof-bio">{{ user.bio }}</p>{% endif %}
+<div class="prof-meta">
+{% if user.location %}<span>📍 {{ user.location }}</span>{% endif %}
+{% if user.website %}<span>🔗 <a href="{{ user.website }}" target="_blank">{{ user.website[:30] }}</a></span>{% endif %}
+<span>📅 {{ user.created_at.strftime('%B %Y') }}</span>
+</div>
+<div class="prof-stats">
+<span><b>{{ user.following_count() }}</b> подписок</span>
+<span><b>{{ user.followers_count() }}</b> подписчиков</span>
+</div>
+</div>
+<div class="tab-h"><span class="tab act">Посты</span></div>
+{% if posts and posts.items %}
+{% for p in posts.items %}
+<div class="post">
+<div class="post-av">
+{% if p.author.avatar_url %}<img src="{{ p.author.avatar_url }}" class="av">
+{% else %}<div class="av av-ph">{{ p.author.username[0].upper() }}</div>{% endif %}
+</div>
+<div class="post-body">
+<div class="post-head">
+<a href="{{ url_for('profile', username=p.author.username) }}" class="post-author">
+<b>{{ p.author.display_name or p.author.username }}</b>
+{% if p.author.verification == 'blue' %}<span class="ck ck-b">✓</span>
+{% elif p.author.verification == 'red' %}<span class="ck ck-r">✓</span>{% endif %}
+<span class="un">@{{ p.author.username }}</span>
+</a>
+<span class="pt">· {{ p.time_ago() }}</span>
+</div>
+<div class="post-text">{{ p.content }}</div>
+<div class="post-acts">
+<a href="{{ url_for('like_post', post_id=p.id) }}" class="pa {% if current_user.is_authenticated and current_user.has_liked(p) %}liked{% endif %}">
+{% if current_user.is_authenticated and current_user.has_liked(p) %}♥{% else %}♡{% endif %} {{ p.likes_count() }}
+</a>
+{% if current_user.is_authenticated and (p.author == current_user or current_user.is_admin()) %}
+<a href="{{ url_for('delete_post', post_id=p.id) }}" class="pa pa-del" onclick="return confirm('Удалить?')">🗑</a>
+{% endif %}
+</div>
+</div>
+</div>
+{% endfor %}
+{% else %}
+<div class="empty"><h2>Нет постов</h2></div>
+{% endif %}
+
+<!-- ========== EDIT PROFILE ========== -->
+{% elif page == 'edit_profile' %}
+<div class="page-head"><h1>Редактировать профиль</h1></div>
+<div class="form-wrap">
+<form method="POST" action="{{ url_for('edit_profile') }}">
+<label>Отображаемое имя</label>
+<input type="text" name="display_name" class="inp" value="{{ current_user.display_name }}" maxlength="100">
+<label>О себе</label>
+<textarea name="bio" class="inp" rows="4" maxlength="500">{{ current_user.bio }}</textarea>
+<label>Местоположение</label>
+<input type="text" name="location" class="inp" value="{{ current_user.location }}" maxlength="100">
+<label>Веб-сайт</label>
+<input type="url" name="website" class="inp" value="{{ current_user.website }}" maxlength="200">
+<label>URL аватара</label>
+<input type="url" name="avatar_url" class="inp" value="{{ current_user.avatar_url }}" maxlength="500" placeholder="https://example.com/photo.jpg">
+<button class="btn btn-p">Сохранить</button>
+</form>
+</div>
+
+<!-- ========== VERIFICATION ========== -->
+{% elif page == 'verification' %}
+<div class="page-head"><h1>Верификация</h1></div>
+<div class="ver-types">
+<div class="ver-card">
+<span class="ck ck-b ck-xl">✓</span>
+<h3>Синяя галочка</h3>
+<p>Подтверждает подлинность аккаунта. Выдаётся после проверки заявки администратором.</p>
+</div>
+<div class="ver-card">
+<span class="ck ck-r ck-xl">✓</span>
+<h3>Красная галочка</h3>
+<p>Отметка администратора платформы Netta. Выдаётся только создателями сети.</p>
+</div>
+</div>
+<div class="form-wrap">
+<h2>Подать заявку</h2>
+<form method="POST" action="{{ url_for('verification') }}">
+<label>Почему вы хотите получить верификацию?</label>
+<textarea name="reason" class="inp" rows="5" required minlength="10" maxlength="500" placeholder="Расскажите о себе..."></textarea>
+<button class="btn btn-p">Отправить заявку</button>
+</form>
+</div>
+
+<!-- ========== ADMIN ========== -->
+{% elif page == 'admin' %}
+<div class="page-head"><h1><span class="ck ck-r">✓</span> Админ-панель</h1></div>
+<div class="admin-stats">
+<div class="st-card"><div class="st-num">{{ users_count }}</div><div class="st-lab">Пользователей</div></div>
+<div class="st-card"><div class="st-num">{{ posts_count }}</div><div class="st-lab">Постов</div></div>
+<div class="st-card"><div class="st-num">{{ verification_requests|length }}</div><div class="st-lab">Заявок</div></div>
+</div>
+
+{% if verification_requests %}
+<div class="admin-sec">
+<h2>📋 Заявки на верификацию</h2>
+{% for u in verification_requests %}
+<div class="admin-row">
+<div class="admin-user">
+<div class="av av-ph av-sm">{{ u.username[0].upper() }}</div>
+<div><b>{{ u.display_name or u.username }}</b> <span class="un">@{{ u.username }}</span>
+<p class="vr-reason">{{ u.verification_reason }}</p></div>
+</div>
+<div class="admin-acts">
+<a href="{{ url_for('admin_verify', user_id=u.id, action='approve') }}" class="btn btn-suc btn-s"><span class="ck ck-b">✓</span> Одобрить</a>
+<a href="{{ url_for('admin_verify', user_id=u.id, action='reject') }}" class="btn btn-dan btn-s">Отклонить</a>
+<a href="{{ url_for('admin_verify', user_id=u.id, action='make_admin') }}" class="btn btn-war btn-s"><span class="ck ck-r">✓</span> Админ</a>
+</div>
+</div>
+{% endfor %}
+</div>
+{% endif %}
+
+<div class="admin-sec">
+<h2>👥 Все пользователи</h2>
+{% for u in users %}
+<div class="admin-row">
+<div class="admin-user">
+<div class="av av-ph av-sm">{{ u.username[0].upper() }}</div>
+<div>
+<b>{{ u.display_name or u.username }}</b>
+{% if u.verification == 'blue' %}<span class="ck ck-b">✓</span>
+{% elif u.verification == 'red' %}<span class="ck ck-r">✓</span>{% endif %}
+<span class="un">@{{ u.username }}</span>
+<small class="meta">{{ u.email }} · {{ u.posts.count() }} постов</small>
+</div>
+</div>
+<div class="admin-acts">
+<a href="{{ url_for('profile', username=u.username) }}" class="btn btn-o btn-s">Профиль</a>
+{% if u.verification == 'none' %}
+<a href="{{ url_for('admin_verify', user_id=u.id, action='approve') }}" class="btn btn-o btn-s" title="Синяя галочка">🔵</a>
+{% else %}
+<a href="{{ url_for('admin_verify', user_id=u.id, action='remove_verification') }}" class="btn btn-o btn-s">✗</a>
+{% endif %}
+{% if u.id != current_user.id %}
+{% if u.role != 'admin' %}
+<a href="{{ url_for('admin_verify', user_id=u.id, action='make_admin') }}" class="btn btn-war btn-s">🔴</a>
+{% else %}
+<a href="{{ url_for('admin_verify', user_id=u.id, action='remove_admin') }}" class="btn btn-o btn-s">Снять</a>
+{% endif %}
+<a href="{{ url_for('admin_verify', user_id=u.id, action='delete') }}" class="btn btn-dan btn-s" onclick="return confirm('Удалить @{{ u.username }}?')">🗑</a>
+{% endif %}
+</div>
+</div>
+{% endfor %}
+</div>
+
+<!-- ========== SEARCH ========== -->
+{% elif page == 'search' %}
+<div class="page-head"><h1>Поиск: "{{ query }}"</h1></div>
+{% if search_users %}
+<div class="admin-sec"><h2>Пользователи</h2>
+{% for u in search_users %}
+<div class="admin-row">
+<div class="admin-user">
+{% if u.avatar_url %}<img src="{{ u.avatar_url }}" class="av av-sm">
+{% else %}<div class="av av-ph av-sm">{{ u.username[0].upper() }}</div>{% endif %}
+<div><a href="{{ url_for('profile', username=u.username) }}"><b>{{ u.display_name or u.username }}</b>
+{% if u.verification == 'blue' %}<span class="ck ck-b">✓</span>
+{% elif u.verification == 'red' %}<span class="ck ck-r">✓</span>{% endif %}</a>
+<span class="un">@{{ u.username }}</span></div>
+</div>
+</div>
+{% endfor %}
+</div>
+{% endif %}
+{% if search_posts %}
+<div class="admin-sec"><h2>Посты</h2>
+{% for p in search_posts %}
+<div class="post">
+<div class="post-av"><div class="av av-ph">{{ p.author.username[0].upper() }}</div></div>
+<div class="post-body">
+<div class="post-head">
+<a href="{{ url_for('profile', username=p.author.username) }}" class="post-author">
+<b>{{ p.author.display_name or p.author.username }}</b>
+{% if p.author.verification == 'blue' %}<span class="ck ck-b">✓</span>
+{% elif p.author.verification == 'red' %}<span class="ck ck-r">✓</span>{% endif %}
+<span class="un">@{{ p.author.username }}</span></a>
+</div>
+<div class="post-text">{{ p.content }}</div>
+</div>
+</div>
+{% endfor %}
+</div>
+{% endif %}
+{% if not search_users and not search_posts %}
+<div class="empty"><h2>Ничего не найдено</h2></div>
+{% endif %}
+{% endif %}
+</main>
+
+<!-- RIGHT -->
+{% if current_user.is_authenticated %}
+<aside class="right">
+<form action="{{ url_for('search') }}" class="search-f">
+<input type="text" name="q" placeholder="Поиск в Netta..." class="search-i" value="{{ query|default('') }}">
+</form>
+<div class="info-box"><h3>Netta</h3><p>Социальная сеть нового поколения ✨</p></div>
+</aside>
+{% endif %}
+</div>
+<script>
+setTimeout(()=>{document.querySelectorAll('.alert').forEach(e=>{e.style.opacity='0';setTimeout(()=>e.remove(),300)})},4000);
+const ta=document.querySelector('.compose-ta');
+const cc=document.querySelector('.cc');
+if(ta&&cc){ta.addEventListener('input',()=>{cc.textContent=500-ta.value.length})}
+</script>
+</body>
+</html>
